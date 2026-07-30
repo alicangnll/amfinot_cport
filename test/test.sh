@@ -2,8 +2,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TEST_BINARY="${SCRIPT_DIR}/amfi_test"
-ENTITLEMENTS="${SCRIPT_DIR}/entitlements.plist"
+cd "${SCRIPT_DIR}"
+
+TEST_BINARY="./amfi_test"
+ENTITLEMENTS="./entitlements.plist"
 
 echo "============================================================"
 echo " AMFI Bypass Verification & Comparison Test Tool"
@@ -23,12 +25,12 @@ echo ""
 # 2. Expected Behaviors Matrix
 echo "------------------------------------------------------------"
 echo " Expected Behaviors Matrix:"
-echo " 1. Not-AMFI KAPALI  (AMFI Aktif):"
-echo "    - Kısıtlı private entitlement taşıyan ad-hoc binary engellenir."
-echo "    - Kernel süreci anında öldürür (Killed: 9 / Signal 9 / Exit 137)."
-echo " 2. Not-AMFI AÇIK    (Bypass Aktif):"
-echo "    - amfidont, amfid doğrulamasını hook'lar."
-echo "    - Binary başarıyla çalışır (Exit code 42 / SUCCESS)."
+echo " 1. Not-AMFI OFF     (AMFI Active):"
+echo "    - Ad-hoc binary carrying restricted private entitlement is blocked."
+echo "    - Kernel kills process instantly (Killed: 9 / Signal 9 / Exit 137)."
+echo " 2. Not-AMFI ON      (Bypass Active):"
+echo "    - amfidont hooks amfid validation."
+echo "    - Binary executes successfully (Exit code 42 / SUCCESS)."
 echo "------------------------------------------------------------"
 echo ""
 
@@ -60,7 +62,7 @@ EOF
 
 # 5. Ad-hoc sign binary with restricted entitlements
 echo "[3/3] Ad-hoc signing binary with private entitlement (com.apple.private.hypervisor)..."
-codesign -s - --entitlements "${ENTITLEMENTS}" --force "${TEST_BINARY}"
+codesign -s - --entitlements "${ENTITLEMENTS}" --force "${TEST_BINARY}" > /dev/null 2>&1
 
 echo ""
 echo "[*] RUNNING LIVE TEST..."
@@ -74,14 +76,14 @@ set -e
 echo "------------------------------------------------------------"
 
 if [ ${EXIT_CODE} -eq 42 ]; then
-    echo " [✓] DURUM: Not-AMFI AÇIK / BYPASS AKTİF!"
-    echo "     Özel yetkili ad-hoc binary engellenmeden başarıyla çalıştı."
+    echo " [✓] STATUS: Not-AMFI ON / BYPASS ACTIVE!"
+    echo "     Privileged ad-hoc binary executed successfully without being blocked."
     rm -f "${TEST_BINARY}"
     exit 0
 else
-    echo " [X] DURUM: Not-AMFI KAPALI / AMFI ENGELLEDİ!"
-    echo "     Süreç AMFI tarafından öldürüldü (Exit status: ${EXIT_CODE})."
-    echo "     Not-AMFI daemon'ını başlatmak için: sudo ./build/amfidont daemon"
+    echo " [X] STATUS: Not-AMFI OFF / AMFI BLOCKED!"
+    echo "     Process was killed by AMFI (Exit status: ${EXIT_CODE})."
+    echo "     To start Not-AMFI daemon: sudo ./build/amfidont daemon"
     rm -f "${TEST_BINARY}"
     exit 1
 fi
