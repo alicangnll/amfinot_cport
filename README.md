@@ -1,5 +1,6 @@
 # Not-AMFI — C/C++ Port
 
+A C/C++ port of the [amfidont](https://github.com/doronz88/amfidont) Python project.  
 **Not-AMFI** attaches to `/usr/libexec/amfid` via the LLDB C++ SB API and intercepts Apple Mobile File Integrity (AMFI) signature validation, allowing explicitly allow-listed binaries to pass regardless of their code signature state.
 
 > **Original project:** Python — uses the `lldb` Python scripting bridge (`import lldb`).  
@@ -17,6 +18,7 @@ Not-AMFI exploits the fact that LLDB can attach to `amfid` when SIP debugging re
 ---
 
 ## How It Works
+<img width="2816" height="1536" alt="AMSI Bypass Flowchart" src="https://github.com/user-attachments/assets/b1cc9652-bfd4-49a9-a167-31af4da60b29" />
 
 ```
 amfid (system daemon)
@@ -56,8 +58,32 @@ amfid (system daemon)
 | macOS | 12+ Monterey | LLDB.framework |
 | Xcode | Full install (not CLT-only) | iOS SDK, `codesign`, `xcrun` |
 | Homebrew LLVM | `brew install llvm` | LLDB C++ SB API headers (`include/lldb/API/`) + `liblldb.dylib` |
-| SIP | Disabled **or** `csrutil enable --without debug` | Permit attaching LLDB to system daemons |
+| SIP | Partial or Disabled | `csrutil enable --without debug` + `csrutil allow-research-guests enable` |
 | AMFI boot-arg | `amfi_get_out_of_my_way=1` in NVRAM | Permit loading unsigned/ad-hoc-signed code |
+
+### macOS SIP & Recovery Configuration
+
+To allow `amfidont` to attach to `amfid` via LLDB while preserving system security, configure SIP in Recovery Mode:
+
+1. **Boot into macOS Recovery Mode** (hold Power button on Apple Silicon, or `Cmd+R` on Intel).
+2. **Open Terminal** from the Utilities menu.
+3. Run the following commands:
+
+```bash
+# Disable debug restrictions (allows LLDB to attach to root daemons like amfid)
+csrutil enable --without debug
+
+# Enable research guest VMs (required for Virtualization.framework research VMs)
+csrutil allow-research-guests enable
+```
+
+> **Alternative (Full Disable):**
+> ```bash
+> csrutil disable
+> csrutil allow-research-guests enable
+> ```
+
+4. **Restart into macOS**.
 
 > **Why Homebrew LLVM?**  
 > Xcode ships `LLDB.framework` without the public C++ SB API headers (`SBDebugger.h`, `SBTarget.h`, etc.) on Apple Silicon macOS. Homebrew LLVM bundles the full header set alongside `liblldb.dylib`, making it the only self-contained option for native compilation.
@@ -256,7 +282,7 @@ amfidont_goport/
 
 ## Security Notes
 
-- Not-AMFI requires root and a relaxed SIP/AMFI configuration. **Only use on machines explicitly set up for security research.**
+- Not-AMFI requires root and a relaxed SIP/AMFI configuration (`csrutil enable --without debug` and `csrutil allow-research-guests enable`). **Only use on machines explicitly set up for security research.**
 - `--allow-all` disables all AMFI signature checks system-wide for the duration of the session. Scope it with `-p`/`-c` where possible.
 - The bypass is purely in-memory and runtime: it patches CPU registers on each breakpoint hit, never modifying files on disk.
 - Detaching Not-AMFI (Ctrl-C or process exit) fully restores `amfid` to normal operation.
