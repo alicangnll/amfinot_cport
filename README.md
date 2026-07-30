@@ -4,7 +4,7 @@
 
 > **Original project:** Python — uses the `lldb` Python scripting bridge (`import lldb`).  
 > **This port:** Pure C for config/daemon + C++ (LLDB SB API) for the bypass loop.  
-> **Binary output:** `.build/release/amfidont` (used by `make boot` to start the daemon before VM launch).
+> **Binary output:** `build/not-amfi` (used by `make boot` to start the daemon before VM launch).
 
 ---
 
@@ -62,7 +62,7 @@ amfid (system daemon)
 
 ### macOS SIP & Recovery Configuration
 
-To allow `amfidont` to attach to `amfid` via LLDB while preserving system security, configure SIP in Recovery Mode:
+To allow `not-amfi` to attach to `amfid` via LLDB while preserving system security, configure SIP in Recovery Mode:
 
 1. **Boot into macOS Recovery Mode** (hold Power button on Apple Silicon, or `Cmd+R` on Intel).
 2. **Open Terminal** from the Utilities menu.
@@ -98,20 +98,20 @@ csrutil allow-research-guests enable
 brew install llvm
 
 # Build
-make                       # → amfidont_goport/build/amfidont
+make                       # → build/not-amfi
 
 # Optional system-wide install
-sudo make install          # → /usr/local/bin/amfidont
+sudo make install          # → /usr/local/bin/not-amfi
 ```
 
 The `Makefile` auto-detects the prefix via `brew --prefix llvm` — no manual path configuration needed.
 
 ### Integration with the parent project
 
-The root `Makefile` owns the `amfidont_bin` target:
+The root `Makefile` owns the `not_amfi_bin` target:
 
 ```bash
-make amfidont_bin          # builds C port → .build/release/amfidont
+make not_amfi_bin          # builds C port → build/not-amfi
 ```
 
 This target is a dependency of `make boot`, so the binary is always up-to-date before the VM starts.
@@ -123,7 +123,7 @@ This target is a dependency of `make boot`, so the binary is always up-to-date b
 ## Usage
 
 ```
-Usage: amfidont [OPTIONS] [COMMAND [ARGS...]]
+Usage: not-amfi [OPTIONS] [COMMAND [ARGS...]]
 
 A simple utility for bypassing amfid signature verification.
 
@@ -152,31 +152,31 @@ When no COMMAND is given, Not-AMFI runs in foreground bypass mode.
 
 ```bash
 # ── Foreground bypass (blocks until Ctrl-C) ───────────────────────────────
-sudo amfidont --verbose
+sudo not-amfi --verbose
 
 # ── Allow everything (research/VM use) ────────────────────────────────────
-sudo amfidont --allow-all
+sudo not-amfi --allow-all
 
 # ── Allow a specific app bundle ───────────────────────────────────────────
-sudo amfidont add-path /Users/alice/dev/MyApp.app/
-sudo amfidont --verbose
+sudo not-amfi add-path /Users/alice/dev/MyApp.app/
+sudo not-amfi --verbose
 
 # ── Allow by CDHash (20-byte hex, no spaces) ──────────────────────────────
-sudo amfidont add-cdhash aabbccddeeff00112233445566778899aabbccdd
-sudo amfidont
+sudo not-amfi add-cdhash aabbccddeeff00112233445566778899aabbccdd
+sudo not-amfi
 
 # ── One-shot path without persisting ──────────────────────────────────────
-sudo amfidont -p /var/jb/ -p /usr/local/bin/ --verbose
+sudo not-amfi -p /var/jb/ -p /usr/local/bin/ --verbose
 
 # ── Background daemon mode ────────────────────────────────────────────────
-sudo amfidont daemon --allow-all          # detaches; logs discarded
-sudo amfidont daemon --verbose            # detaches; stderr to /dev/null
+sudo not-amfi daemon --allow-all          # detaches; logs discarded
+sudo not-amfi daemon --verbose            # detaches; stderr to /dev/null
 
 # ── Manage the allow-list ─────────────────────────────────────────────────
-amfidont add-path    /var/jb/
-amfidont remove-path /var/jb/
-amfidont add-cdhash    aabb...
-amfidont remove-cdhash aabb...
+not-amfi add-path    /var/jb/
+not-amfi remove-path /var/jb/
+not-amfi add-cdhash    aabb...
+not-amfi remove-cdhash aabb...
 ```
 
 > **Note:** `add-path` / `remove-path` / `add-cdhash` / `remove-cdhash` do **not** require `sudo` — they only write to `~/.not-amfi/`. Only the bypass commands need root to attach to `amfid`.
@@ -204,7 +204,7 @@ Allow-lists are stored as plain text files:
 ## Daemon Mode
 
 ```bash
-sudo amfidont daemon [OPTIONS]
+sudo not-amfi daemon [OPTIONS]
 ```
 
 Daemon mode forks a child process, calls `setsid()` to detach from the terminal session, and redirects stdio to `/dev/null`. The parent prints the child PID and exits. The child runs the foreground bypass loop indefinitely.
@@ -213,7 +213,7 @@ This is used by `make boot` to keep the bypass active while the vphone-cli VM is
 
 ```bash
 # From the root Makefile boot target:
-sudo .build/release/amfidont --allow-all > /tmp/amfidont.log 2>&1 &
+sudo build/not-amfi --allow-all > /tmp/not-amfi.log 2>&1 &
 ```
 
 ---
@@ -221,8 +221,8 @@ sudo .build/release/amfidont --allow-all > /tmp/amfidont.log 2>&1 &
 ## Source Layout
 
 ```
-amfidont_goport/
-├── amfidont.cpp            Main entry point — getopt_long CLI + subcommand dispatch
+amfinot_cport/
+├── not_amfi.cpp            Main entry point — getopt_long CLI + subcommand dispatch
 ├── bypass_runtime.h        Public C interface to the LLDB bypass loop
 ├── bypass_runtime.cpp      LLDB SB API: attach, breakpoint, validate_hook, bypass_loop
 ├── config_store.h          Public C interface to persistent config
@@ -232,8 +232,8 @@ amfidont_goport/
 ├── Makefile                Builds via Homebrew LLVM (auto-detected prefix)
 ├── README.md               This file
 └── build/
-    ├── amfidont            Compiled binary (copied to .build/release/amfidont)
-    ├── amfidont.o
+    ├── not-amfi            Compiled binary
+    ├── not_amfi.o
     ├── bypass_runtime.o
     ├── config_store.o
     └── daemon_runtime.o
@@ -243,7 +243,7 @@ amfidont_goport/
 
 | Module | Language | Responsibility |
 |---|---|---|
-| `amfidont.cpp` | C++ | `main()`, `getopt_long` arg parsing, subcommand dispatch |
+| `not_amfi.cpp` | C++ | `main()`, `getopt_long` arg parsing, subcommand dispatch |
 | `bypass_runtime.cpp` | C++ (LLDB SB API) | Attach to `amfid`, set breakpoint, `validate_hook()`, `bypass_loop()` |
 | `config_store.c` | C | `~/.not-amfi/` directory, read/write path and cdhash list files, mtime snapshot |
 | `daemon_runtime.c` | C | `fork()` + `setsid()` + `execv()` to daemonise the bypass loop |
@@ -258,24 +258,6 @@ amfidont_goport/
 | `lldb::SBThread` | `GetStopReason()`, `GetFrameAtIndex()`, `StepOutOfFrame()` |
 | `lldb::SBFrame` | `FindRegister()` — reads `x0`/`rdi` (self) and `x0`/`rax` (return value) |
 | `lldb::SBValue` | `GetValue()` (register as string), `SetValueFromCString("1")` (patch return), `GetObjectDescription()` (ObjC -description) |
-
----
-
-## Differences from the Python Original
-
-| Aspect | Python original | This C/C++ port |
-|---|---|---|
-| LLDB interface | Python scripting bridge (`import lldb`) | C++ SB API (`liblldb.dylib`) |
-| Daemon mode | `subprocess.Popen(start_new_session=True)` | `fork()` + `setsid()` + `execv()` |
-| CLI framework | `typer` + `typer-injector` | `getopt_long` (POSIX) |
-| Dependency | `xcrun python3` + `pip install typer` | `brew install llvm` |
-| Distribution | Python package (`pip install amfidont`) | Native Mach-O binary, no runtime deps |
-| Config reload | File mtime comparison | File mtime comparison (identical logic) |
-| Breakpoint target | `-[AMFIPathValidator_macos validateWithError:]` | Same |
-| Register patching | `ret.SetValueFromCString("1")` | Same C++ SB API call |
-| Config path | `~/.amfidont/` | `~/.not-amfi/` |
-| Arch detection | `target.GetTriple()` → string check | Same |
-| Expression evaluation | `target.EvaluateExpression(expr)` | Same C++ API |
 
 ---
 

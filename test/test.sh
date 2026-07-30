@@ -12,7 +12,7 @@ echo " AMFI Bypass Verification & Comparison Test Tool"
 echo "============================================================"
 
 # 1. Daemon Status Check
-DAEMON_PID=$(pgrep -x "amfidont" || pgrep -f "build/amfidont" | head -n 1 || true)
+DAEMON_PID=$(pgrep -x "not-amfi" || pgrep -f "build/not-amfi" | head -n 1 || true)
 
 echo "[+] Detecting Not-AMFI Daemon Status..."
 if [ -n "${DAEMON_PID}" ]; then
@@ -29,7 +29,7 @@ echo " 1. Not-AMFI OFF     (AMFI Active):"
 echo "    - Ad-hoc binary carrying restricted private entitlement is blocked."
 echo "    - Kernel kills process instantly (Killed: 9 / Signal 9 / Exit 137)."
 echo " 2. Not-AMFI ON      (Bypass Active):"
-echo "    - amfidont hooks amfid validation."
+echo "    - not-amfi hooks amfid validation."
 echo "    - Binary executes successfully (Exit code 42 / SUCCESS)."
 echo "------------------------------------------------------------"
 echo ""
@@ -83,7 +83,7 @@ if [ ${EXIT_CODE} -eq 42 ]; then
 else
     echo " [X] STATUS: Not-AMFI OFF / AMFI BLOCKED!"
     echo "     Process was killed by AMFI (Exit status: ${EXIT_CODE})."
-    echo "     To start Not-AMFI daemon: sudo ./build/amfidont daemon"
+    echo "     To start Not-AMFI daemon: sudo ./build/not-amfi daemon"
     rm -f "${TEST_BINARY}"
     exit 1
 fi

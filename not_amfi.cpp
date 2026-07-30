@@ -161,7 +161,7 @@ static int cmd_config(const char *subcmd, const char *arg,
                       const char *config_dir)
 {
     /* Ensure config directory exists */
-    AmfidontConfig *cfg = load_persistent_config(config_dir, paths_file, cdhashes_file);
+    NotAmfiConfig *cfg = load_persistent_config(config_dir, paths_file, cdhashes_file);
     if (!cfg) {
         fprintf(stderr, "Not-AMFI: failed to initialise config directory\n");
         return 1;

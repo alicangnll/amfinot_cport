@@ -1,5 +1,5 @@
 # =============================================================================
-# amfidont — C/C++ port Makefile
+# not-amfi — C/C++ port Makefile
 # =============================================================================
 #
 # Requirements:
@@ -8,9 +8,9 @@
 #   - Run as root for amfid attach
 #
 # Usage:
-#   make            Build the amfidont binary
+#   make            Build the not-amfi binary
 #   make clean      Remove build artefacts
-#   make install    Copy binary to /usr/local/bin/amfidont
+#   make install    Copy binary to /usr/local/bin/not-amfi
 #
 # =============================================================================
 
@@ -79,13 +79,13 @@ C_SRCS := \
 
 CXX_SRCS := \
     bypass_runtime.cpp \
-    amfidont.cpp
+    not_amfi.cpp
 
 C_OBJS   := $(patsubst %.c,   $(BUILD_DIR)/%.o, $(C_SRCS))
 CXX_OBJS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(CXX_SRCS))
 ALL_OBJS := $(C_OBJS) $(CXX_OBJS)
 
-TARGET := $(BUILD_DIR)/amfidont
+TARGET := $(BUILD_DIR)/not-amfi
 
 # --------------------------------------------------------------------------- #
 # Targets
@@ -120,5 +120,5 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 install: all
-	install -m 755 $(TARGET) /usr/local/bin/amfidont
-	@echo "Installed to /usr/local/bin/amfidont"
+	install -m 755 $(TARGET) /usr/local/bin/not-amfi
+	@echo "Installed to /usr/local/bin/not-amfi"

@@ -332,7 +332,7 @@ static void bypass_loop(lldb::SBProcess  &process,
                          bool              allow_all)
 {
     /* Load initial persistent config */
-    AmfidontConfig *cfg = load_persistent_config(config_dir, paths_file, cdhashes_file);
+    NotAmfiConfig *cfg = load_persistent_config(config_dir, paths_file, cdhashes_file);
     ConfigMtimeState mtime = config_modified_time_state(paths_file, cdhashes_file);
 
     StrArray paths    = merge_string_arrays(cli_paths,    cfg ? cfg->paths    : nullptr,

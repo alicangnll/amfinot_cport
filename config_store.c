@@ -158,7 +158,7 @@ void config_paths_init(char   *out_config_dir,
     snprintf(out_cdhashes_file, len, "%s/.not-amfi/cdhashes", home);
 }
 
-AmfidontConfig *load_persistent_config(const char *config_dir,
+NotAmfiConfig *load_persistent_config(const char *config_dir,
                                         const char *paths_file,
                                         const char *cdhashes_file)
 {
@@ -168,7 +168,7 @@ AmfidontConfig *load_persistent_config(const char *config_dir,
         return NULL;
     }
 
-    AmfidontConfig *cfg = (AmfidontConfig *)calloc(1, sizeof(AmfidontConfig));
+    NotAmfiConfig *cfg = (NotAmfiConfig *)calloc(1, sizeof(NotAmfiConfig));
     if (!cfg) return NULL;
 
     if (read_list_file(paths_file,    &cfg->paths,    &cfg->path_count)    != 0 ||
@@ -180,7 +180,7 @@ AmfidontConfig *load_persistent_config(const char *config_dir,
     return cfg;
 }
 
-void free_config(AmfidontConfig *cfg)
+void free_config(NotAmfiConfig *cfg)
 {
     if (!cfg) return;
     for (size_t i = 0; i < cfg->path_count;    i++) free(cfg->paths[i]);

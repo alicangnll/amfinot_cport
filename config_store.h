@@ -34,7 +34,7 @@ typedef struct {
     size_t  path_count;
     char  **cdhashes;
     size_t  cdhash_count;
-} AmfidontConfig;
+} NotAmfiConfig;
 
 /*
  * Snapshot of config file modification times.
@@ -73,15 +73,15 @@ void config_paths_init(char *out_config_dir,
  * Load persisted path and cdhash allow-lists from disk.
  * Creates config_dir and empty list files if they do not exist.
  *
- * Returns a heap-allocated AmfidontConfig, or NULL on fatal error.
+ * Returns a heap-allocated NotAmfiConfig, or NULL on fatal error.
  * The caller is responsible for calling free_config().
  */
-AmfidontConfig *load_persistent_config(const char *config_dir,
-                                        const char *paths_file,
-                                        const char *cdhashes_file);
+NotAmfiConfig *load_persistent_config(const char *config_dir,
+                                       const char *paths_file,
+                                       const char *cdhashes_file);
 
-/* Free an AmfidontConfig returned by load_persistent_config(). */
-void free_config(AmfidontConfig *cfg);
+/* Free a NotAmfiConfig returned by load_persistent_config(). */
+void free_config(NotAmfiConfig *cfg);
 
 /* --------------------------------------------------------------------
  * Modification
