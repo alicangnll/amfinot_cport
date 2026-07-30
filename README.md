@@ -1,6 +1,5 @@
 # Not-AMFI — C/C++ Port
 
-A C/C++ port of the [amfidont](https://github.com/doronz88/amfidont) Python project.  
 **Not-AMFI** attaches to `/usr/libexec/amfid` via the LLDB C++ SB API and intercepts Apple Mobile File Integrity (AMFI) signature validation, allowing explicitly allow-listed binaries to pass regardless of their code signature state.
 
 > **Original project:** Python — uses the `lldb` Python scripting bridge (`import lldb`).  
